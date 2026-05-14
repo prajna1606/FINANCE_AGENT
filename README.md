@@ -1,5 +1,7 @@
 # Finance Credit Follow-Up Email Agent
+```
 An AI-powered agent that automatically generates and sends escalating follow-up emails for overdue invoices. The agent identifies overdue records, determines the appropriate stage, generates personalised emails using a Large Language Model,send then via SMTP and logs every interaction for audit purposes.
+```
 ---
 ## PROBLEM STATEMENT
 Finance teams spend significant time manually chasing overdue payments. These follow-ups are often inconsistent in tone and timing, leading to strained client relationships.This agent automates the entire workflow , from identifying overdue invoices to sending appropriately toned emails while also maintaining a complete audit trial and escalating critical cases for human review.
@@ -42,7 +44,7 @@ pip install -r requirements.txt
 ### 3. Create your .env file
 Copy .env.example and fill in your credentials
 ```bash
-cp .env.example.env
+cp .env.example. env
 ```
 ```env
 GEMINI_API_KEY=your_gemini_api_key_here
@@ -66,8 +68,8 @@ The agent automatically assigns an escalation stage based on how many days the i
 | Stage 1 | 1-7 days | Warm & Friendly | Gentle Reminder |
 | Stage 2 | 8-14 days | Polite but Firm | Request confirmation of payment date |
 | Stage 3 | 15-21 days | Formal & Serious | Demand response within 48 hours |
-| Stage 4 | 22-30 days | Stern & Urgent | Final notice before legal escalation
-| Escalate | 30+ days | Flag for legal | No auto-email, human review required
+| Stage 4 | 22-30 days | Stern & Urgent | Final notice before legal escalation |
+| Escalate | 30+ days | Flag for legal | No auto-email, human review required |
 
 ## Agent Architecture
 ### Pattern: Rule-based plan and Execute Agent
@@ -147,20 +149,16 @@ If any check fails, the email is not sent and the invoice is skipped with a log 
 - Clients email addresses are never sent to the Gemini API, only invoice details that are necessary for email generation are included in LLM prompt.
 ---
 ### 3. API key Exposure
-
 The API key is stored inside a `.env` file and loaded via `python-dotenv`. Key is never hardcoded in source code. The `.env` file is listed in `.gitignore` to prevent accidental commits.In production, secrets could be managed using a dediacted secret manager such as AWS Secrets Manager or Google Cloud Secret Manager.
----
-### 4. Hallucination Risk
 
+### 4. Hallucination Risk
 Gemini is prompted to return strictly formatted JSON with only two keys: `subject` and `body`. The output is then parsed with `json.loads()` and for a invalid JSON, a retry is made.
 Invoices overdue by more than 30 days are never auto-emailed. Instead, the agent prints a flag for the Finance team to review manually. This ensures human oversight for the most sensitive cases where legal action may be required.
 ---
 ### 5. Unauthorised access
-
 The agent runs a scheduled script with no exposed HTTP endpoints, eliminating the risk of unauthorised API access entirely. If deployed as a web service in future, endpoint authentication via API keys or OAuth 2.0 and rate limiting (e.g. via Flask-Limiter or AWS API Gateway) would be implemented.
 ---
 ### 6. Email Spoofing
-
 Emails are currently sent via Gmail SMTP using credentials stored in .env.
 In production, a verified business domain would be used as the sender and DNS record would be configured with SPF,DKIM and DMARC to prevent spoofing and ensure deliverability.
 Dry-Run Mode:
