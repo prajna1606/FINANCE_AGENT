@@ -125,12 +125,12 @@ This workflow is linear, single-agent pipeline, read->classify->generate->send->
 ---
 ## Security Risk Mitigations
 ### 1. Prompt Injection
-All invoices data is passed through a sanitize() function before included in LLM prompts. This cleans out the leading/trailing whitespaces and remove newline(\n,\r) characters that could be used to inject additional instructions into the prompt.
+All invoices data is passed through a `sanitize()` function before included in LLM prompts. This cleans out the leading/trailing whitespaces and remove newline(\n,\r) characters that could be used to inject additional instructions into the prompt.
 ```python
 def sanitize(value):
     return str(value).strip().replace("\n", " ").replace("\r", " ") 
 ```
-Also, output is validated using validate_email() function.
+Also, output is validated using `validate_email()` function.
 The validation checks that the generated email contains:
 
 - The correct invoice number
@@ -141,18 +141,18 @@ The validation checks that the generated email contains:
 If any check fails, the email is not sent and the invoice is skipped with a log entry.
 ---
 ### 2. Data privacy/PII
-- data/ and logs/ folders are listed in gitignore, thus no client data is ever pushed to the repository
+- `data/` and `logs/` folders are listed in `gitignore`, thus no client data is ever pushed to the repository
 - client names are masked in log files
 - Email bodies are redacted in logs, thus only metadata is retained for audit
 - Clients email addresses are never sent to the Gemini API, only invoice details that are necessary for email generation are included in LLM prompt.
 ---
 ### 3. API key Exposure
 
-The API key is stored inside a .env file and loaded via python-dotenv. Key is never hardcoded in source code. The .env file is listed in .gitignore to prevent accidental commits.In production, secrets could be managed using a dediacted secret manager such as AWS Secrets Manager or Google Cloud Secret Manager.
+The API key is stored inside a `.env` file and loaded via `python-dotenv`. Key is never hardcoded in source code. The `.env` file is listed in `.gitignore` to prevent accidental commits.In production, secrets could be managed using a dediacted secret manager such as AWS Secrets Manager or Google Cloud Secret Manager.
 ---
 ### 4. Hallucination Risk
 
-Gemini is prompted to return strictly formatted JSON with only two keys: subject and body. The output is then parsed with json.loads() and for a invalid JSON, a retry is made.
+Gemini is prompted to return strictly formatted JSON with only two keys: `subject` and `body`. The output is then parsed with `json.loads()` and for a invalid JSON, a retry is made.
 Invoices overdue by more than 30 days are never auto-emailed. Instead, the agent prints a flag for the Finance team to review manually. This ensures human oversight for the most sensitive cases where legal action may be required.
 ---
 ### 5. Unauthorised access
@@ -223,9 +223,9 @@ Install all with:
 pip install -r requirements.txt
 ```
 ## Sample Output
-### Stage 1- Warm & friendly
-![Sample Email](images/S1_sample_output.png)
-### Stage - stern & Urgent
+### Stage 3- Warm & friendly
+![Sample Email](images/S3_sample_output.png)
+### Stage 4 - stern & Urgent
 ![Sample Email](images/S4_sample_output.png)
 ### Escalation Flag
 ![Sample Email](images/S5_sample_output.png)
