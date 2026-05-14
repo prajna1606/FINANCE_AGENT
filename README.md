@@ -1,9 +1,9 @@
 # Finance Credit Follow-Up Email Agent
 An AI-powered agent that automatically generates and sends escalating follow-up emails for overdue invoices. The agent identifies overdue records, determines the appropriate stage, generates personalised emails using a Large Language Model,send then via SMTP and logs every interaction for audit purposes.
----
+
 ## PROBLEM STATEMENT
 Finance teams spend significant time manually chasing overdue payments. These follow-ups are often inconsistent in tone and timing, leading to strained client relationships.This agent automates the entire workflow , from identifying overdue invoices to sending appropriately toned emails while also maintaining a complete audit trial and escalating critical cases for human review.
----
+
 ## Features
 - Reads invoice data from a CSV file
 - Automatically calculates days overdue and assigns appropriate stage.
@@ -152,10 +152,10 @@ The API key is stored inside a `.env` file and loaded via `python-dotenv`. Key i
 ### 4. Hallucination Risk
 Gemini is prompted to return strictly formatted JSON with only two keys: `subject` and `body`. The output is then parsed with `json.loads()` and for a invalid JSON, a retry is made.
 Invoices overdue by more than 30 days are never auto-emailed. Instead, the agent prints a flag for the Finance team to review manually. This ensures human oversight for the most sensitive cases where legal action may be required.
----
+
 ### 5. Unauthorised access
 The agent runs a scheduled script with no exposed HTTP endpoints, eliminating the risk of unauthorised API access entirely. If deployed as a web service in future, endpoint authentication via API keys or OAuth 2.0 and rate limiting (e.g. via Flask-Limiter or AWS API Gateway) would be implemented.
----
+
 ### 6. Email Spoofing
 Emails are currently sent via Gmail SMTP using credentials stored in .env.
 In production, a verified business domain would be used as the sender and DNS record would be configured with SPF,DKIM and DMARC to prevent spoofing and ensure deliverability.
