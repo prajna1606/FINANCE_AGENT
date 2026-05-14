@@ -1,7 +1,5 @@
 # Finance Credit Follow-Up Email Agent
-```
 An AI-powered agent that automatically generates and sends escalating follow-up emails for overdue invoices. The agent identifies overdue records, determines the appropriate stage, generates personalised emails using a Large Language Model,send then via SMTP and logs every interaction for audit purposes.
-```
 ---
 ## PROBLEM STATEMENT
 Finance teams spend significant time manually chasing overdue payments. These follow-ups are often inconsistent in tone and timing, leading to strained client relationships.This agent automates the entire workflow , from identifying overdue invoices to sending appropriately toned emails while also maintaining a complete audit trial and escalating critical cases for human review.
