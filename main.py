@@ -1,20 +1,20 @@
-from dotenv import load_dotenv
-from google import genai
 import os
-load_dotenv()
-api_key = os.getenv("GEMINI_API_KEY")
-client= genai.Client(api_key=api_key)
-from datetime import date
-from datetime import datetime
-import pandas as pd
-import numpy as np
-import time
 import json
+import time
 import smtplib
+from datetime import date, datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+
+import pandas as pd
+import numpy as np
+from dotenv import load_dotenv
+from google import genai
 from apscheduler.schedulers.blocking import BlockingScheduler
 
+load_dotenv()
+api_key = os.getenv("GEMINI_API_KEY")
+client = genai.Client(api_key=api_key)
 dry_run = os.getenv("DRY_RUN", "false").lower() == "true"
 
 def sanitize(value):
@@ -104,6 +104,64 @@ def validate_email(email, row):
         return False
     return True
 
+#PROMPTS
+stage1_prompt = """
+You are a professional finance agent.
+
+Generate a warm and friendly payment reminder email for an overdue invoice.
+Assume the client simply overlooked the payment.
+
+Rules:
+- Tone: polite, positive, non-threatening
+- Must include: client name, invoice number, amount due, due date, days overdue, payment link
+- Payment link format: https://company.com/pay/<invoice_no>
+- Return ONLY a JSON object with keys "subject" and "body". No markdown, no extra text.
+"""
+
+stage2_prompt = """
+You are a professional finance agent.
+
+Generate a polite but firm payment reminder email for an invoice that is 8-14 days overdue.
+A previous reminder was already sent and ignored.
+
+Rules:
+- Tone: professional, firm, concerned but respectful
+- Must include: client name, invoice number, amount due, due date, days overdue, payment link
+- Ask the client to confirm an exact payment date
+- Payment link format: https://company.com/pay/<invoice_no>
+- Return ONLY a JSON object with keys "subject" and "body". No markdown, no extra text.
+"""
+
+stage3_prompt = """
+You are a professional finance agent.
+
+Generate a formal and serious payment demand email for an invoice that is 15-21 days overdue.
+Multiple reminders have been sent with no response.
+
+Rules:
+- Tone: formal, assertive, serious — no pleasantries
+- Must include: client name, invoice number, amount due, due date, days overdue, payment link
+- Demand a response within 48 hours
+- Mention that continued non-payment may impact their credit terms or business relationship
+- Payment link format: https://company.com/pay/<invoice_no>
+- Return ONLY a JSON object with keys "subject" and "body". No markdown, no extra text.
+"""
+
+stage4_prompt = """
+You are a professional finance agent.
+
+Generate a stern final notice email for an invoice that is 22-30 days overdue.
+This is the last communication before the account is referred to the legal and recovery team.
+
+Rules:
+- Tone: stern, urgent, direct — make consequences crystal clear
+- Must include: client name, invoice number, amount due, due date, days overdue, payment link
+- State explicitly this is the final notice before legal escalation
+- Ask client to pay immediately or call the finance team
+- Payment link format: https://company.com/pay/<invoice_no>
+- Return ONLY a JSON object with keys "subject" and "body". No markdown, no extra text.
+"""        
+
 def run_agent():
     df = pd.read_csv("data/invoices.csv")
     df["due_date"] = pd.to_datetime(df["due_date"]).dt.date
@@ -119,63 +177,6 @@ def run_agent():
    ]
     stages = ["stage 1", "stage 2", "stage 3", "stage 4", "escalate"]
     df["stage"] = np.select(conditions, stages, default="unknown")
-
-    stage1_prompt = """
-    You are a professional finance agent.
-
-    Generate a warm and friendly payment reminder email for an overdue invoice.
-    Assume the client simply overlooked the payment.
-
-    Rules:
-   - Tone: polite, positive, non-threatening
-   - Must include: client name, invoice number, amount due, due date, days overdue, payment link
-   - Payment link format: https://company.com/pay/<invoice_no>
-   - Return ONLY a JSON object with keys "subject" and "body". No markdown, no extra text.
-   """
-
-    stage2_prompt = """
-    You are a professional finance agent.
-
-    Generate a polite but firm payment reminder email for an invoice that is 8-14 days overdue.
-    A previous reminder was already sent and ignored.
-
-    Rules:
-    - Tone: professional, firm, concerned but respectful
-    - Must include: client name, invoice number, amount due, due date, days overdue, payment link
-    - Ask the client to confirm an exact payment date
-    - Payment link format: https://company.com/pay/<invoice_no>
-    - Return ONLY a JSON object with keys "subject" and "body". No markdown, no extra text.
-    """
-
-    stage3_prompt = """
-    You are a professional finance agent.
-
-    Generate a formal and serious payment demand email for an invoice that is 15-21 days overdue.
-    Multiple reminders have been sent with no response.
-
-    Rules:
-    - Tone: formal, assertive, serious — no pleasantries
-    - Must include: client name, invoice number, amount due, due date, days overdue, payment link
-    - Demand a response within 48 hours
-    - Mention that continued non-payment may impact their credit terms or business relationship
-    - Payment link format: https://company.com/pay/<invoice_no>
-    - Return ONLY a JSON object with keys "subject" and "body". No markdown, no extra text.
-    """
-
-    stage4_prompt = """
-    You are a professional finance agent.
-
-    Generate a stern final notice email for an invoice that is 22-30 days overdue.
-    This is the last communication before the account is referred to the legal and recovery team.
-
-    Rules:
-    - Tone: stern, urgent, direct — make consequences crystal clear
-    - Must include: client name, invoice number, amount due, due date, days overdue, payment link
-    - State explicitly this is the final notice before legal escalation
-    - Ask client to pay immediately or call the finance team
-    - Payment link format: https://company.com/pay/<invoice_no>
-    - Return ONLY a JSON object with keys "subject" and "body". No markdown, no extra text.
-    """
 
     for index, row in df.iterrows():
 
@@ -229,8 +230,11 @@ def run_agent():
 
         print(email)
         time.sleep(5)
-run_agent()
+
+#run_agent() ,to run the agent immediately without scheduling, useful for testing and debugging. Comment out the scheduler block below when using this.
+
+#SCHEDULER
 scheduler= BlockingScheduler()
 scheduler.add_job(run_agent, 'cron', hour=9, minute=0)
 print("Agent started.")  
-scheduler.start()  
+scheduler.start() 
