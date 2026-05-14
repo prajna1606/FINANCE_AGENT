@@ -15,18 +15,19 @@ Finance teams spend significant time manually chasing overdue payments. These fo
 - Runs on daily schedule using APScheduler.
 ---
 ## Project Structure
+```
 Finance_agent/
 ├── data/
-│   ├──.gitkeep
-    └──sample_invoices.csv
+│   ├── .gitkeep
+│   └── sample_invoices.csv
 ├── logs/
 │   └── .gitkeep
 ├── main.py
-├── .env
-├── .env.examples
+├── .env.example
 ├── .gitignore
 ├── requirements.txt
-├── README.md
+└── README.md
+```
 ---
 ## Setup & Installation
 ### 1. Clone the repository
@@ -77,16 +78,26 @@ No third party Framework(LangChain,CrewAI) was used. The workflow is managed by 
 - Easier to audit and maintain for finance-critical worflow.
 
 ### Execution Flow
-```mermaid
-flowchart TD
-
-    A[OBSERVE<br/>Read invoices.csv via pandas<br/>Calculate days_due for each invoice]
-
-    A --> B[PLAN<br/>Assign escalation stage based on days due rules<br/>Stage 1 / Stage 2 / Stage 3 / Stage 4 / Escalate]
-
-    B --> C[Stage 1-4<br/><br/>Generate Email<br/>(Gemini LLM)<br/><br/>Validate Output<br/><br/>Send / Dry-run<br/><br/>Log (PII masked)]
-
-    B --> D[Escalate 30+ days<br/><br/>Flag for Legal Team<br/>No email sent]
+```
+Read invoices.csv
+↓
+Calculate days_due
+↓
+Assign Escalation Stage
+↓
+┌────┴────┐
+Stage 1-4  Escalate (30+ days)
+↓             ↓
+Generate     Flag for
+Email        Legal Team
+(Gemini)
+↓
+Validate
+Output
+↓
+Send / Dry-run
+↓
+Log (PII masked)
 ```
 ---
 ## LLM & Framework Choice
@@ -106,10 +117,11 @@ Gemini 2.5 Flash offers comparable output quality for structured generation task
 |--------|-----------------------|---------------|
 | Complexity | High- abstracts simple logic | Low- direct and readable |
 | Control | Limited- black-box internals | Full- custom retry, validation |
-| Dependencies | Many transitive dependecies | Minimal |
+| Dependencies | Many transitive dependencies | Minimal |
 | Auditability | harder to trace | Easy to follow line by line |
 | Fit for task | Overkill for linear workflow | Perfect fit |
-this workflow is linear, single-agent pipeline, read->classify->generate->send->log.Frameworks like LangChain and CrewAI are designed for complex multi-agent, graph-based or tool-using architectures, Using them here would add unnecessary complexity without any benefit.
+
+This workflow is linear, single-agent pipeline, read->classify->generate->send->log.Frameworks like LangChain and CrewAI are designed for complex multi-agent, graph-based or tool-using architectures, Using them here would add unnecessary complexity without any benefit.
 ---
 ## Security Risk Mitigations
 ### 1. Prompt Injection
@@ -135,23 +147,27 @@ If any check fails, the email is not sent and the invoice is skipped with a log 
 - Clients email addresses are never sent to the Gemini API, only invoice details that are necessary for email generation are included in LLM prompt.
 ---
 ### 3. API key Exposure
+
 The API key is stored inside a .env file and loaded via python-dotenv. Key is never hardcoded in source code. The .env file is listed in .gitignore to prevent accidental commits.In production, secrets could be managed using a dediacted secret manager such as AWS Secrets Manager or Google Cloud Secret Manager.
 ---
 ### 4. Hallucination Risk
+
 Gemini is prompted to return strictly formatted JSON with only two keys: subject and body. The output is then parsed with json.loads() and for a invalid JSON, a retry is made.
 Invoices overdue by more than 30 days are never auto-emailed. Instead, the agent prints a flag for the Finance team to review manually. This ensures human oversight for the most sensitive cases where legal action may be required.
 ---
 ### 5. Unauthorised access
+
 The agent runs a scheduled script with no exposed HTTP endpoints, eliminating the risk of unauthorised API access entirely. If deployed as a web service in future, endpoint authentication via API keys or OAuth 2.0 and rate limiting (e.g. via Flask-Limiter or AWS API Gateway) would be implemented.
 ---
 ### 6. Email Spoofing
+
 Emails are currently sent via Gmail SMTP using credentials stored in .env.
 In production, a verified business domain would be used as the sender and DNS record would be configured with SPF,DKIM and DMARC to prevent spoofing and ensure deliverability.
 Dry-Run Mode:
 a DRY_RUN environment variable allows the full pipeline to run without sending any emails. This enables safe testing and CI validation.
 ```env
-DRY_RUN= true #No emails sent, status logged as dry_run
-DRY_RUN= false #Emails are sent
+DRY_RUN=true #No emails sent, status logged as dry_run
+DRY_RUN=false #Emails are sent
 ```
 ---
 ## Security Summary Table
