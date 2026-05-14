@@ -48,7 +48,7 @@ cp .env.example. env
 GEMINI_API_KEY=your_gemini_api_key_here
 EMAIL_USER=your_email@gmail.com
 EMAIL_PASS=your_gmail_app_password
-dry_run= true
+dry_run=true
 ```
 Note:For Gmail,use an App Password,not your regular gmail password.
 ### 4. Add your invoice data
@@ -122,7 +122,7 @@ Gemini 2.5 Flash offers comparable output quality for structured generation task
 | Fit for task | Overkill for linear workflow | Perfect fit |
 
 This workflow is linear, single-agent pipeline, read->classify->generate->send->log.Frameworks like LangChain and CrewAI are designed for complex multi-agent, graph-based or tool-using architectures, Using them here would add unnecessary complexity without any benefit.
----
+
 ## Security Risk Mitigations
 ### 1. Prompt Injection
 All invoices data is passed through a `sanitize()` function before included in LLM prompts. This cleans out the leading/trailing whitespaces and remove newline(\n,\r) characters that could be used to inject additional instructions into the prompt.
@@ -207,12 +207,12 @@ Every processed invoice generates a JSON log file in logs/ containing:
 ```
 ---
 ## Requirements
-google-genai
-pandas
-numpy
-python-dotenv
-apscheduler
-smtplib
+- google-genai
+- pandas
+- numpy
+- python-dotenv
+- apscheduler
+- smtplib
 
 Install all with:
 ```bash
