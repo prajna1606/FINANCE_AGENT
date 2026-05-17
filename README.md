@@ -32,7 +32,7 @@ Finance_agent/
 ## Setup & Installation
 ### 1. Clone the repository
 ```bash
-git clone <your-repo-link>
+git clone https://github.com/prajna1606/Finance_Agent
 cd Finance-Agent
 ```
 ### 2. Install dependencies
@@ -219,7 +219,7 @@ Install all with:
 pip install -r requirements.txt
 ```
 ## Sample Output
-### Stage 3- Warm & friendly
+### Stage 3- Formal & Serious
 ![Sample Email](images/S3_sample_output.png)
 ### Stage 4 - stern & Urgent
 ![Sample Email](images/S4_sample_output.png)
